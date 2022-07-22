@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2015"],
+    "module": "ES2015",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "strict": true,
+    "target": "ES2015"
+  },
+  "exclude": ["../node_modules", "dist"]
+}
