@@ -1,18 +1,11 @@
 import { devtoolsExchange } from '@urql/devtools';
-import { Cache, cacheExchange } from '@urql/exchange-graphcache';
+import { cacheExchange } from '@urql/exchange-graphcache';
 import { IntrospectionData } from '@urql/exchange-graphcache/dist/types/ast';
 import React, { useMemo } from 'react';
 import { isPresent } from 'ts-is-present';
-import {
-  createClient,
-  dedupExchange,
-  Exchange,
-  fetchExchange,
-  gql,
-  Operation,
-  Provider,
-} from 'urql';
+import { createClient, dedupExchange, Exchange, fetchExchange, Operation, Provider } from 'urql';
 import { fromPromise, map, mergeMap, pipe } from 'wonka';
+import schema from './schema.json';
 
 const setContextExchange =
   (contextSetter: (operation: Operation) => Promise<Operation['context']>): Exchange =>
@@ -29,8 +22,6 @@ const setContextExchange =
       forward
     );
 
-const schema = {};
-
 export const UrqlProvider: React.FC = (props) => {
   const client = useMemo(
     () =>
@@ -40,7 +31,9 @@ export const UrqlProvider: React.FC = (props) => {
         exchanges: [
           devtoolsExchange,
           dedupExchange,
-          cacheExchange(),
+          cacheExchange({
+            schema: schema as any as IntrospectionData,
+          }),
           setContextExchange(async (operation) => {
             const origFetchOptions =
               typeof operation.context.fetchOptions === 'function'

@@ -1,4 +1,5 @@
 import { ApolloServer, gql } from 'apollo-server';
+import data from './data.json';
 import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageGraphQLPlayground,
@@ -68,10 +69,10 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     getTransactions: () => {
-      return [];
+      return data.getTransactions;
     },
     getBits: () => {
-      return [];
+      return data.getBits;
     },
   },
 };
