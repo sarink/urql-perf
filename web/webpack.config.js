@@ -15,6 +15,8 @@ module.exports = {
 
   mode: isDev ? 'development' : 'production',
 
+  devtool: isDev ? 'source-map' : undefined,
+
   entry: {
     index: [path.join(webDir, 'index.tsx')],
   },

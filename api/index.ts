@@ -26,11 +26,13 @@ const typeDefs = gql`
   type Account {
     id: ID!
     name: String!
+    plaidItem: PlaidItem
   }
 
   type PlaidItem {
     id: ID!
     name: String!
+    institution: Institution
   }
 
   type Institution {
