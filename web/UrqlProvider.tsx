@@ -1,7 +1,11 @@
 import { devtoolsExchange } from '@urql/devtools';
-import { cacheExchange } from '@urql/exchange-graphcache';
+import { offlineExchange } from '@urql/exchange-graphcache';
+import { makeDefaultStorage } from '@urql/exchange-graphcache/default-storage';
 import { IntrospectionData } from '@urql/exchange-graphcache/dist/types/ast';
+import { requestPolicyExchange } from '@urql/exchange-request-policy';
+import { uniqueId } from 'lodash';
 import React, { useMemo } from 'react';
+import { GET_TODOS } from 'Todos';
 import { isPresent } from 'ts-is-present';
 import { createClient, dedupExchange, Exchange, fetchExchange, Operation, Provider } from 'urql';
 import { fromPromise, map, mergeMap, pipe } from 'wonka';
@@ -31,8 +35,26 @@ export const UrqlProvider: React.FC = (props) => {
         exchanges: [
           devtoolsExchange,
           dedupExchange,
-          cacheExchange({
+          requestPolicyExchange({}),
+          offlineExchange({
             schema: schema as any as IntrospectionData,
+            storage: makeDefaultStorage({ idbName: `urql-todos` }),
+            optimistic: {
+              createTodo: (todo) => ({ ...todo, id: uniqueId('todo-'), __typename: 'Todo' }),
+              updateTodo: (todo) => ({ ...todo, __typename: 'Todo' }),
+            },
+
+            updates: {
+              Mutation: {
+                createTodo: (result, args, cache) => {
+                  console.log('updates', result);
+                  cache.updateQuery({ query: GET_TODOS }, (data) => ({
+                    ...data,
+                    getTodos: [...(data?.getTodos ?? []), result.createTodo],
+                  }));
+                },
+              },
+            },
           }),
           setContextExchange(async (operation) => {
             const origFetchOptions =
