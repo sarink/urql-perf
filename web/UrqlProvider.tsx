@@ -56,6 +56,10 @@ export const UrqlProvider: React.FC = (props) => {
                 console.log('optimistic.updateTodo', result);
                 return result;
               },
+              removeTodo: (id) => {
+                console.log('optimistic.removeTodo', id);
+                return id;
+              },
             },
 
             updates: {
@@ -67,6 +71,14 @@ export const UrqlProvider: React.FC = (props) => {
                     console.log('updates.createTodo, updating getTodos query to', getTodos);
                     return { ...data, getTodos };
                   });
+                },
+                removeTodo(result, args, cache, _info) {
+                  const todo = {
+                    __typename: 'Todo',
+                    id: args.id as string,
+                  };
+                  console.log('updates.removeTodo invalidating', todo);
+                  cache.invalidate(todo);
                 },
               },
             },

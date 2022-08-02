@@ -10,6 +10,7 @@ const typeDefs = gql`
   type Mutation {
     createTodo(name: String!, done: Boolean!): Todo!
     updateTodo(id: ID!, name: String, done: Boolean): Todo!
+    removeTodo(id: ID!): ID!
   }
 
   type Todo {
@@ -24,6 +25,7 @@ let todos: Todo[] = [];
 
 type CreateTodo = { name: string; done: boolean };
 type UpdateTodo = { id: string; name?: string; done?: boolean };
+type RemoveTodo = { id: string };
 
 const resolvers = {
   Query: {
@@ -44,6 +46,10 @@ const resolvers = {
       const updated = { ...existing, ...input };
       todos = todos.map((td) => (td.id === updated.id ? updated : td));
       return updated;
+    },
+    removeTodo: (parent: any, input: RemoveTodo) => {
+      todos = todos.filter((td) => td.id !== input.id);
+      return input.id;
     },
   },
 };

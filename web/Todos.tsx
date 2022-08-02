@@ -31,12 +31,19 @@ const UPDATE_TODO = gql`
   }
 `;
 
+const REMOVE_TODO = gql`
+  mutation RemoveTodo($id: ID!) {
+    removeTodo(id: $id)
+  }
+`;
+
 type Todo = { id: string; name: string; done: boolean };
 
 export const Todos: React.FC = () => {
   const [{ data, error, fetching }] = useQuery({ query: GET_TODOS });
   if (error) return <div>Error :(</div>;
-  if (fetching || !data) return <div>Loading...</div>;
+  if (fetching) return <div>Loading...</div>;
+  if (!data) return <div>No data?</div>;
   const todos: Todo[] = data.getTodos ?? [];
   return (
     <div>
@@ -77,6 +84,7 @@ const CreateTodo: React.FC = () => {
 
 const Todo: React.FC<{ todo: Todo }> = ({ todo }) => {
   const [, updateTodo] = useMutation(UPDATE_TODO);
+  const [, removeTodo] = useMutation(REMOVE_TODO);
   const [name, setName] = useState(todo.name);
   const [done, setDone] = useState(!!todo.done);
   return (
@@ -86,6 +94,7 @@ const Todo: React.FC<{ todo: Todo }> = ({ todo }) => {
       <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
       <input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} />
       <button onClick={() => updateTodo({ id: todo.id, name, done })}>Save</button>
+      <button onClick={() => removeTodo({ id: todo.id })}>Remove</button>
     </div>
   );
 };
