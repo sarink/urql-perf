@@ -1,78 +1,55 @@
 import { ApolloServer, gql } from 'apollo-server';
-import data from './data.json';
-import {
-  ApolloServerPluginLandingPageDisabled,
-  ApolloServerPluginLandingPageGraphQLPlayground,
-} from 'apollo-server-core';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { v4 } from 'uuid';
 
 const typeDefs = gql`
   type Query {
-    getTransactions: [Transaction!]!
-    getBits: [Bit!]!
+    getTodos: [Todo!]!
   }
 
-  enum BitFrequency {
-    Monthly
+  type Mutation {
+    createTodo(name: String!, done: Boolean!): Todo!
+    updateTodo(id: ID!, name: String, done: Boolean): Todo!
+    removeTodo(id: ID!): ID!
   }
 
-  type Bit {
+  type Todo {
     id: ID!
     name: String!
-    frequency: BitFrequency!
-    amount: Int!
-    index: String!
-    transactions: [Transaction!]
-  }
-
-  type Account {
-    id: ID!
-    name: String!
-    plaidItem: PlaidItem
-  }
-
-  type PlaidItem {
-    id: ID!
-    name: String!
-    institution: Institution
-  }
-
-  type Institution {
-    id: ID!
-    name: String!
-  }
-
-  type Transaction {
-    id: ID!
-    account: Account
-    amount: Float!
-    category: [String!]!
-    date: String!
-    location: TransactionLocation
-    name: String!
-    merchantName: String
-    paymentChannel: String!
-    paymentMeta: TransactionPaymentMeta
-    pending: Boolean!
-    bit: Bit
-  }
-
-  type TransactionPaymentMeta {
-    paymentProcessor: String
-  }
-
-  type TransactionLocation {
-    city: String
-    region: String
+    done: Boolean!
   }
 `;
 
+type Todo = { id: string; name: string; done: boolean };
+let todos: Todo[] = [];
+
+type CreateTodo = { name: string; done: boolean };
+type UpdateTodo = { id: string; name?: string; done?: boolean };
+type RemoveTodo = { id: string };
+
 const resolvers = {
   Query: {
-    getTransactions: () => {
-      return data.getTransactions;
+    getTodos: () => {
+      return todos;
     },
-    getBits: () => {
-      return data.getBits;
+  },
+  Mutation: {
+    createTodo: (parent: any, input: CreateTodo) => {
+      const id = v4();
+      const todo = { ...input, id };
+      todos.push(todo);
+      return todo;
+    },
+    updateTodo: (parent: any, input: UpdateTodo) => {
+      const existing = todos.find((td) => td.id === input.id);
+      if (!existing) throw new Error('No todo found');
+      const updated = { ...existing, ...input };
+      todos = todos.map((td) => (td.id === updated.id ? updated : td));
+      return updated;
+    },
+    removeTodo: (parent: any, input: RemoveTodo) => {
+      todos = todos.filter((td) => td.id !== input.id);
+      return input.id;
     },
   },
 };
