@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "start:api": "ts-node-script api/index.ts",
-    "codegen": "graphql-codegen",
     "dev": "npm run start:api & npm run dev:web",
     "dev:web": "webpack serve --config web/webpack.config",
     "build:web": "NODE_ENV=production webpack --config web/webpack.config",

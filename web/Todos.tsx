@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from 'urql';
 
 export const GET_TODOS = gql`
@@ -39,12 +39,19 @@ const REMOVE_TODO = gql`
 
 type Todo = { id: string; name: string; done: boolean };
 
-export const Todos: React.FC = () => {
+export const TodosPage: React.FC = () => {
   const [{ data, error, fetching }] = useQuery({ query: GET_TODOS });
+  const todos = useMemo(() => {
+    console.log('rebuilding todos', data?.getTodos);
+    return data?.getTodos ?? [];
+  }, [data?.getTodos]);
   if (error) return <div>Error :(</div>;
   if (fetching) return <div>Loading...</div>;
-  if (!data) return <div>No data?</div>;
-  const todos: Todo[] = data.getTodos ?? [];
+  return <TodosList todos={todos} />;
+};
+
+const TodosList: React.FC<{ todos: Todo[] }> = React.memo(({ todos }) => {
+  console.log('rendering todos list');
   return (
     <div>
       <h3>Showing {todos.length} todos</h3>
@@ -57,7 +64,37 @@ export const Todos: React.FC = () => {
       ))}
     </div>
   );
-};
+});
+
+const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
+  const [, updateTodo] = useMutation(UPDATE_TODO);
+  const [, removeTodo] = useMutation(REMOVE_TODO);
+  const { id, name, done } = todo;
+  console.log('rendering todo', id, name);
+  return (
+    <div
+      style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', width: 300 }}
+    >
+      <input
+        type="text"
+        defaultValue={name}
+        onBlur={(e) => {
+          const name = e.target.value;
+          updateTodo({ id, name });
+        }}
+      />
+      <input
+        type="checkbox"
+        checked={done}
+        onChange={(e) => {
+          const done = e.target.checked;
+          updateTodo({ id, done });
+        }}
+      />
+      <button onClick={() => removeTodo({ id: todo.id })}>Remove</button>
+    </div>
+  );
+});
 
 const CreateTodo: React.FC = () => {
   const [, createTodo] = useMutation(CREATE_TODO);
@@ -78,23 +115,6 @@ const CreateTodo: React.FC = () => {
       >
         Create
       </button>
-    </div>
-  );
-};
-
-const Todo: React.FC<{ todo: Todo }> = ({ todo }) => {
-  const [, updateTodo] = useMutation(UPDATE_TODO);
-  const [, removeTodo] = useMutation(REMOVE_TODO);
-  const [name, setName] = useState(todo.name);
-  const [done, setDone] = useState(!!todo.done);
-  return (
-    <div
-      style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', width: 300 }}
-    >
-      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-      <input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} />
-      <button onClick={() => updateTodo({ id: todo.id, name, done })}>Save</button>
-      <button onClick={() => removeTodo({ id: todo.id })}>Remove</button>
     </div>
   );
 };

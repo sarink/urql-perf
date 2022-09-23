@@ -2,6 +2,10 @@ import { ApolloServer, gql } from 'apollo-server';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { v4 } from 'uuid';
 
+// NOTE: When making a change to the api, the server deos not automatically reload.
+// You have to kill and restart the process manually
+// If you update the schema, you should also run: `node fetch-schema.js` to rebuild the schema.json file for graphcache
+
 const typeDefs = gql`
   type Query {
     getTodos: [Todo!]!
@@ -21,7 +25,11 @@ const typeDefs = gql`
 `;
 
 type Todo = { id: string; name: string; done: boolean };
-let todos: Todo[] = [];
+let todos: Todo[] = ['apples', 'bananas', 'pears', 'oranges'].map((name, index) => ({
+  id: `${index}`,
+  name,
+  done: Math.random() < 0.5,
+}));
 
 type CreateTodo = { name: string; done: boolean };
 type UpdateTodo = { id: string; name?: string; done?: boolean };
