@@ -1,19 +1,14 @@
-import { Dashboard } from 'Dashboard';
-import { Plan } from 'Plan';
+import { ApolloProvider } from 'ApolloProvider';
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { UrqlProvider } from 'UrqlProvider';
+import { BrowserRouter } from 'react-router-dom';
+import { TodosPage } from 'Todos';
 
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <UrqlProvider>
-        <Routes>
-          <Route path="/plan" element={<Plan />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={<Dashboard />} />
-        </Routes>
-      </UrqlProvider>
+      <ApolloProvider>
+        <TodosPage />
+      </ApolloProvider>
     </BrowserRouter>
   );
 };
