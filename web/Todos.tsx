@@ -68,7 +68,7 @@ const TodosList: React.FC<{ todos: Todo[] }> = React.memo(({ todos }) => {
 
 const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
   const [, updateTodo] = useMutation(UPDATE_TODO);
-  const [, removeTodo] = useMutation(REMOVE_TODO);
+  // const [, removeTodo] = useMutation(REMOVE_TODO);
   const { id, name, done } = todo;
   console.log('rendering todo', id, name);
   return (
@@ -91,7 +91,7 @@ const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
           updateTodo({ id, done });
         }}
       />
-      <button onClick={() => removeTodo({ id: todo.id })}>Remove</button>
+      {/* <button onClick={() => removeTodo({ id: todo.id })}>Remove</button> */}
     </div>
   );
 });
