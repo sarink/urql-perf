@@ -25,7 +25,7 @@ const typeDefs = gql`
 `;
 
 type Todo = { id: string; name: string; done: boolean };
-let todos: Todo[] = ['apples', 'bananas', 'pears', 'oranges'].map((name, index) => ({
+let todos: Todo[] = ['apples', 'bananas', 'oranges'].map((name, index) => ({
   id: `${index}`,
   name,
   done: Math.random() < 0.5,
