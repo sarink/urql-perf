@@ -1,5 +1,6 @@
+import { gql, useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { uniqueId } from 'lodash';
 import React, { useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from 'urql';
 
 export const GET_TODOS = gql`
   query GetTodos {
@@ -40,7 +41,7 @@ const REMOVE_TODO = gql`
 type Todo = { id: string; name: string; done: boolean };
 
 export const TodosPage: React.FC = () => {
-  const [{ data, error, fetching }] = useQuery({ query: GET_TODOS });
+  const { data, error, loading: fetching } = useQuery(GET_TODOS);
   const todos = useMemo(() => {
     console.log('rebuilding todos', data?.getTodos);
     return data?.getTodos ?? [];
@@ -67,8 +68,8 @@ const TodosList: React.FC<{ todos: Todo[] }> = React.memo(({ todos }) => {
 });
 
 const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
-  const [, updateTodo] = useMutation(UPDATE_TODO);
-  const [, removeTodo] = useMutation(REMOVE_TODO);
+  const [updateTodo] = useMutation(UPDATE_TODO);
+  // const [removeTodo] = useMutation(REMOVE_TODO);
   const { id, name, done } = todo;
   console.log('rendering todo', id, name);
   return (
@@ -80,7 +81,15 @@ const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
         defaultValue={name}
         onBlur={(e) => {
           const name = e.target.value;
-          updateTodo({ id, name });
+          updateTodo({
+            variables: { id, name },
+            optimisticResponse: {
+              __typename: 'Todo',
+              id,
+              name,
+              done,
+            },
+          });
         }}
       />
       <input
@@ -88,16 +97,45 @@ const Todo: React.FC<{ todo: Todo }> = React.memo(({ todo }) => {
         checked={done}
         onChange={(e) => {
           const done = e.target.checked;
-          updateTodo({ id, done });
+          updateTodo({
+            variables: { id, done },
+            optimisticResponse: {
+              __typename: 'Todo',
+              id,
+              name,
+              done,
+            },
+          });
         }}
       />
-      <button onClick={() => removeTodo({ id: todo.id })}>Remove</button>
+      {/* <button onClick={() => removeTodo({ variables: { id: todo.id } })}>Remove</button> */}
     </div>
   );
 });
 
 const CreateTodo: React.FC = () => {
-  const [, createTodo] = useMutation(CREATE_TODO);
+  const client = useApolloClient();
+  const [createTodo] = useMutation(CREATE_TODO, {
+    update: (cache, { data }) => {
+      cache.modify({
+        fields: {
+          getTodos: (existingTodos = []) => {
+            const newTodoRef = cache.writeFragment({
+              data: data.createTodo,
+              fragment: gql`
+                fragment NewTodo on Todo {
+                  __typename
+                  name
+                  done
+                }
+              `,
+            });
+            return existingTodos.concat(newTodoRef);
+          },
+        },
+      });
+    },
+  });
   const [name, setName] = useState('');
   const [done, setDone] = useState(false);
   return (
@@ -108,7 +146,17 @@ const CreateTodo: React.FC = () => {
       <input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} />
       <button
         onClick={() => {
-          createTodo({ name, done });
+          createTodo({
+            variables: { name, done },
+            optimisticResponse: {
+              createTodo: {
+                __typename: 'Todo',
+                id: uniqueId('temp-todo-'),
+                name,
+                done,
+              },
+            },
+          });
           setName('');
           setDone(false);
         }}
